@@ -36,7 +36,9 @@ module UARTinterface(
 		.DATA_IN(DATA_IN__CONFIG[7:0]),
 		.DATA_OUT(current_byte),
 		.DIRTYBUFFER(data_avail_to_read),
-		.FILLED(BUSY)
+		.FILLED(BUSY),
+		.PARITY_IN(1'b0),
+		.PARITY_OUT()
 	);
 	
 	reg [1:0] mode;
@@ -65,7 +67,7 @@ module UARTinterface(
 	
 	// Rx
 	wire [7:0] out_byte;
-	wire write_to_rx_buffer, interrupt;
+	wire write_to_rx_buffer, interrupt, parity;
 	
 	rx rx(
 		.CLK(baudclkx32), 
@@ -74,7 +76,7 @@ module UARTinterface(
 		.MODE(mode),
 		.DATA_DONE(write_to_rx_buffer),
 		.DATA(out_byte),
-		.PARITY()
+		.PARITY(parity)
 	);
 	
 	fifo_buffer rx_buffer(
@@ -85,7 +87,9 @@ module UARTinterface(
 		.DATA_IN(out_byte),
 		.DATA_OUT(DATA_OUT),
 		.DIRTYBUFFER(interrupt),
-		.FILLED()
+		.FILLED(),
+		.PARITY_IN(parity),
+		.PARITY_OUT(PARITY)
 	);
 	
 	assign INTERRUPT = {7'b0, interrupt};
