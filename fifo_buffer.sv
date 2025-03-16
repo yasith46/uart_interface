@@ -23,14 +23,20 @@ module fifo_buffer(
 		end else begin
 			if (WRITETO_BUFFER) begin
 				buffer[write_head] <= {PARITY_IN, DATA_IN};
-				buffer_valid <= buffer_valid | (1'b1 << write_head); // Sets to 1
 				write_head <= write_head + 8'd1;
 			end
 			
 			if (READ_BUFFER) begin
 				current_read <= buffer[read_head];
-				buffer_valid <= buffer_valid & ~(1'b1 << write_head);    // Sets to 0
 				read_head <= read_head + 8'd1;
+			end
+			
+			if (WRITETO_BUFFER & READ_BUFFER) begin
+				buffer_valid <= buffer_valid & ~(256'b1 << read_head) | (256'b1 << write_head);    // Sets to 0
+			end else if (WRITETO_BUFFER) begin
+				buffer_valid <= buffer_valid | (256'b1 << write_head); // Sets to 1
+			end else if (READ_BUFFER) begin
+				buffer_valid <= buffer_valid & ~(256'b1 << read_head); // Sets to 0
 			end
 		end
 	end

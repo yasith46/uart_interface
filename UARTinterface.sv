@@ -53,7 +53,8 @@ module UARTinterface(
 	wire tx_busy;
 	
 	tx tx(
-		.CLK(baudclk), 
+		.CLK(CLK), 
+		.BAUD(baudclk),
 		.RST(RST), 
 		.DATA_AVAILABLE(data_avail_to_read),
 		.DATA(current_byte),

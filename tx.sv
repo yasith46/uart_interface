@@ -1,8 +1,8 @@
 module tx(
-		input CLK, RST, DATA_AVAILABLE,
+		input CLK, BAUD, RST, DATA_AVAILABLE,
 		input [7:0] DATA,
 		input  [1:0] MODE,
-		output reg BUSY, TX
+		output reg TX,BUSY
 	);
 	
 	typedef enum logic [3:0] {
@@ -37,31 +37,35 @@ module tx(
 				tx_idle:
 					begin
 						TX <= 1'b1;
-						BUSY <= 1'b0;
-						buffer <= 8'b0;
-						if (DATA_AVAILABLE) tx_state <= tx_start;
+						if (DATA_AVAILABLE) begin
+							tx_state <= tx_start;
+							BUSY <= 1'b1;
+						end else begin
+							BUSY <= 1'b0;
+						end
 					end
 					
 				tx_start:
 					begin
 						TX <= 1'b0;
-						BUSY <= 1'b1;
 						buffer <= DATA;
-						tx_state <= tx_send;
+						if (BAUD) tx_state <= tx_send;
 					end
 					
 				tx_send:
 					begin
 						TX <= buffer[count];
 						if (count == 3'd7) begin
-							count <= 3'b0;
-							
-							if (MODE == M8N1) 
-								tx_state <= tx_stop;
-							else
-								tx_state <= tx_parity;
+							if (BAUD) begin
+								count <= 3'b0;
+								
+								if (MODE == M8N1) 
+									tx_state <= tx_stop;
+								else
+									tx_state <= tx_parity;
+							end
 						end else begin
-							count <= count + 3'd1;
+							if (BAUD) count <= count + 3'd1;
 						end
 					end
 					
@@ -72,13 +76,16 @@ module tx(
 						else
 							TX <= ~parity;
 							
-						tx_state <= tx_stop;
+						if (BAUD) tx_state <= tx_stop;
 					end
 					
 				tx_stop:
 					begin
 						TX <= 1'b1;
-						tx_state <= tx_idle;
+						if (BAUD) begin
+							tx_state <= tx_idle;
+							BUSY <= 1'b0;
+						end
 					end
 					
 				default:
@@ -90,5 +97,5 @@ module tx(
 			endcase
 		end
 	end
-	
+
 endmodule 
